@@ -27,6 +27,7 @@ int main(void)
         return -1;
     }
     
+    u16 Registers[8];
     u32 Offset = 0;
     while(Offset < sizeof(byte_arr))
     {
@@ -36,7 +37,7 @@ int main(void)
         {
             Offset += Decoded.Size;
             printf("Size:%u Op:%s Flags:0x%x\n", Decoded.Size, Sim86_MnemonicFromOperationType(Decoded.Op), Decoded.Flags);
-            printf("Operands:%s\n", Sim86_RegisterNameFromOperand(&Decoded.Operands[0].Register));
+            printf("Operands:%s\n", (&Decoded.Operands[0].Register));
             printf("Operands:%s\n", Sim86_RegisterNameFromOperand(&Decoded.Operands[1].Register));            
         }
         else
