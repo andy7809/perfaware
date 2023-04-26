@@ -6,6 +6,9 @@ LIBI=/Users/andrewwiedenmann/code/perfaware/build
 
 all: sim86lib sharedtest
 
+memory.o: ../memory.cpp sim86lib
+	$(CXX) $(CXXFLAGS) -I$(SHAREDI) -L$(LIBI) -o $(@D)/$@ -lsim86mac $<
+
 sim86lib: libsim86mac.so
 
 sharedtest: sharedlibtest.o
