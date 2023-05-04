@@ -10,24 +10,31 @@ u32 getFileSize(FILE *f) {
 }
 
 void Mov(instruction* ins, u16* mem) {
+    
     mem[ins->Operands[0].Register.Index] = ins->Operands[1].Immediate.Value;
 }
 
 void PrintRegisters(u16* mem) {
-    for (int i = 0; i < 8; ++i) {
-        printf("%d", mem[i]);
+    for (u32 i = 1; i < 9; ++i) {
+        register_access Reg {.Index=i, .Count=2, .Offset=2};
+        printf("%s: %x\n", Sim86_RegisterNameFromOperand(&Reg), mem[i]);
+    }
+}
+
+void InitMem(u16* mem) {
+    for (u32 i = 1; i < 9; ++i) {
+        mem[i] = 0;
     }
 }
 
 int main(void)
 {
     FILE *binary;
-    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0037_single_register_mov", "rb");
+    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0043_immediate_movs", "rb");
     u32 size = getFileSize(binary);
     u8 byte_arr[size];
     for (int i = 0; i < size; ++i) {
         byte_arr[i] = fgetc(binary);
-        // printf("%x\n", byte_arr[i]);
     }
     u32 Version = Sim86_GetVersion();
     printf("Sim86 Version: %u (expected %u)\n", Version, SIM86_VERSION);
@@ -37,7 +44,8 @@ int main(void)
         return -1;
     }
     
-    u16 Registers[8];
+    u16 Registers[9];
+    InitMem(Registers);
     u32 Offset = 0;
     while(Offset < sizeof(byte_arr))
     {
@@ -46,10 +54,10 @@ int main(void)
         if(Decoded.Op)
         {
             Offset += Decoded.Size;
-            printf("Size:%u Op:%s Flags:0x%x\n", Decoded.Size, Sim86_MnemonicFromOperationType(Decoded.Op), Decoded.Flags);
             if (!strcmp(Sim86_MnemonicFromOperationType(Decoded.Op), "mov")) {
                 Mov(&Decoded, Registers);
-                printf("mov\n");
+                PrintRegisters(Registers);
+                printf("\n");
             }           
         }
         else
