@@ -10,8 +10,16 @@ u32 getFileSize(FILE *f) {
 }
 
 void Mov(instruction* ins, u16* mem) {
-    
-    mem[ins->Operands[0].Register.Index] = ins->Operands[1].Immediate.Value;
+    switch(ins->Operands[1].Type) {
+     case operand_type::Operand_Register:
+        mem[ins->Operands[0].Register.Index] = mem[ins->Operands[1].Register.Index];
+        break;
+     case operand_type::Operand_Immediate:
+        mem[ins->Operands[0].Register.Index] = ins->Operands[1].Immediate.Value;
+        break;
+     default:
+        break;
+    }
 }
 
 void PrintRegisters(u16* mem) {
@@ -29,8 +37,9 @@ void InitMem(u16* mem) {
 
 int main(void)
 {
+    printf("hello world");
     FILE *binary;
-    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0043_immediate_movs", "rb");
+    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0044_register_movs", "rb");
     u32 size = getFileSize(binary);
     u8 byte_arr[size];
     for (int i = 0; i < size; ++i) {
