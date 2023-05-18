@@ -22,11 +22,85 @@ void Mov(instruction* ins, u16* mem) {
     }
 }
 
+
+void Sub(instruction* ins, u16* mem, u16* flags, bool updateMem) {
+    u16 val = 0;
+    switch(ins->Operands[1].Type) {
+     case operand_type::Operand_Register:
+        val = mem[ins->Operands[0].Register.Index] - mem[ins->Operands[1].Register.Index];
+        break;
+     case operand_type::Operand_Immediate:
+        val = mem[ins->Operands[0].Register.Index] - ins->Operands[1].Immediate.Value;
+        break;
+     default:
+        break;
+    }
+
+    if (updateMem)  {
+        mem[ins->Operands[0].Register.Index] = val;
+    }
+
+    u32 signMask = 0x0080;
+    u32 bitvalue = val & 0x8000;
+    if (bitvalue == 0) {
+        *flags &= ~signMask;
+    } else {
+        *flags |= signMask;
+    }
+
+    u32 zeroMask = 0x0040;
+    if (val != 0){
+       *flags &= ~zeroMask; 
+    } else {
+       *flags |= zeroMask;
+    }
+}
+
+void Add(instruction* ins, u16* mem, u16* flags) {
+    switch(ins->Operands[1].Type) {
+     case operand_type::Operand_Register:
+        mem[ins->Operands[0].Register.Index] += mem[ins->Operands[1].Register.Index];
+        break;
+     case operand_type::Operand_Immediate:
+        mem[ins->Operands[0].Register.Index] += ins->Operands[1].Immediate.Value;
+        break;
+     default:
+        break;
+    }
+    
+
+    u32 signMask = 0x0080;
+    u32 bitvalue = mem[ins->Operands[0].Register.Index] & 0x8000;
+    if (bitvalue == 0) {
+        *flags &= ~signMask;
+    } else {
+        *flags |= signMask;
+    }
+
+    u32 zeroMask = 0x0040;
+    if (mem[ins->Operands[0].Register.Index] != 0){
+       *flags &= ~zeroMask; 
+    } else {
+       *flags |= zeroMask;
+    }
+}
+
 void PrintRegisters(u16* mem) {
     for (u32 i = 1; i < 9; ++i) {
         register_access Reg {.Index=i, .Count=2, .Offset=2};
         printf("%s: %x\n", Sim86_RegisterNameFromOperand(&Reg), mem[i]);
     }
+}
+
+void PrintFlags(u16 flags) {
+    printf("Flags: ");
+    if (flags & 0x80) {
+        printf(" SF ");
+    }
+    if (flags & 0x40) {
+        printf(" ZF ");
+    }
+    printf("\n");
 }
 
 void InitMem(u16* mem) {
@@ -37,9 +111,8 @@ void InitMem(u16* mem) {
 
 int main(void)
 {
-    printf("hello world");
     FILE *binary;
-    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0044_register_movs", "rb");
+    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0046_add_sub_cmp", "rb");
     u32 size = getFileSize(binary);
     u8 byte_arr[size];
     for (int i = 0; i < size; ++i) {
@@ -54,6 +127,7 @@ int main(void)
     }
     
     u16 Registers[9];
+    u16 Flags = 0;
     InitMem(Registers);
     u32 Offset = 0;
     while(Offset < sizeof(byte_arr))
@@ -63,11 +137,24 @@ int main(void)
         if(Decoded.Op)
         {
             Offset += Decoded.Size;
-            if (!strcmp(Sim86_MnemonicFromOperationType(Decoded.Op), "mov")) {
-                Mov(&Decoded, Registers);
-                PrintRegisters(Registers);
-                printf("\n");
-            }           
+            switch (Decoded.Op) {
+                case Op_mov:
+                    Mov(&Decoded, Registers);
+                    break;
+                case Op_sub:
+                    Sub(&Decoded, Registers, &Flags, true);
+                    break;
+                case Op_cmp:
+                    Sub(&Decoded, Registers, &Flags, false);
+                    break;
+                case Op_add:
+                    Add(&Decoded, Registers, &Flags);
+                default:
+                    break;
+            }
+            PrintRegisters(Registers);
+            PrintFlags(Flags);
+            printf("\n");
         }
         else
         {
