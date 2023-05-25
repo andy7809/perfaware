@@ -112,7 +112,7 @@ void InitMem(u16* mem) {
 int main(void)
 {
     FILE *binary;
-    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0046_add_sub_cmp", "rb");
+    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0048_ip_register", "rb");
     u32 size = getFileSize(binary);
     u8 byte_arr[size];
     for (int i = 0; i < size; ++i) {
@@ -129,14 +129,14 @@ int main(void)
     u16 Registers[9];
     u16 Flags = 0;
     InitMem(Registers);
-    u32 Offset = 0;
-    while(Offset < sizeof(byte_arr))
+    u16 InstructionPointer = 0;
+    while(InstructionPointer < sizeof(byte_arr))
     {
         instruction Decoded;
-        Sim86_Decode8086Instruction(sizeof(byte_arr) - Offset, byte_arr + Offset, &Decoded);
+        Sim86_Decode8086Instruction(sizeof(byte_arr) - InstructionPointer, byte_arr + InstructionPointer, &Decoded);
         if(Decoded.Op)
         {
-            Offset += Decoded.Size;
+            InstructionPointer += Decoded.Size;
             switch (Decoded.Op) {
                 case Op_mov:
                     Mov(&Decoded, Registers);
@@ -154,6 +154,7 @@ int main(void)
             }
             PrintRegisters(Registers);
             PrintFlags(Flags);
+            printf("IP: %x\n", InstructionPointer);
             printf("\n");
         }
         else
