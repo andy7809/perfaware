@@ -9,12 +9,18 @@ u32 getFileSize(FILE *f) {
     return sz;
 }
 
+void LogInstruction(char const *name, u16 previous, u16 next) {
+    printf("%s:0x%x->0x%x", Sim86_RegisterNameFromOperand(&Operands[0].Register), mem[ins->Operands[0].Register.Index], mem[ins->Operands[1].Register.Index]);
+}
+
 void Mov(instruction* ins, u16* mem) {
     switch(ins->Operands[1].Type) {
      case operand_type::Operand_Register:
+        printf("%s:0x%x->0x%x", Sim86_RegisterNameFromOperand(&Operands[0].Register), mem[ins->Operands[0].Register.Index], mem[ins->Operands[1].Register.Index]);
         mem[ins->Operands[0].Register.Index] = mem[ins->Operands[1].Register.Index];
         break;
      case operand_type::Operand_Immediate:
+        printf("%s:0x%x->0x%x", Sim86_RegisterNameFromOperand(&Operands[0].Register), mem[ins->Operands[0].Register.Index], ins->Operands[1].Immediate.Valu);
         mem[ins->Operands[0].Register.Index] = ins->Operands[1].Immediate.Value;
         break;
      default:
@@ -59,6 +65,7 @@ void Sub(instruction* ins, u16* mem, u16* flags, bool updateMem) {
 void Add(instruction* ins, u16* mem, u16* flags) {
     switch(ins->Operands[1].Type) {
      case operand_type::Operand_Register:
+        printf("%s:0x%x->0x%x", Sim86_RegisterNameFromOperand(&Operands[0].Register), mem[ins->Operands[0].Register.Index], mem[ins->Operands[1].Register.Index]);
         mem[ins->Operands[0].Register.Index] += mem[ins->Operands[1].Register.Index];
         break;
      case operand_type::Operand_Immediate:
@@ -84,6 +91,12 @@ void Add(instruction* ins, u16* mem, u16* flags) {
        *flags |= zeroMask;
     }
 }
+
+// void Jne(instruction* ins, u16* mem, u16* flags, u16* ip) {
+//     if (flags & 0x0040) {
+//         *ip -= 
+//     }
+// }
 
 void PrintRegisters(u16* mem) {
     for (u32 i = 1; i < 9; ++i) {
@@ -112,7 +125,7 @@ void InitMem(u16* mem) {
 int main(void)
 {
     FILE *binary;
-    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0048_ip_register", "rb");
+    binary = fopen("/Users/andrewwiedenmann/code/computer_enhance/perfaware/part1/listing_0049_conditional_jumps", "rb");
     u32 size = getFileSize(binary);
     u8 byte_arr[size];
     for (int i = 0; i < size; ++i) {
@@ -149,12 +162,12 @@ int main(void)
                     break;
                 case Op_add:
                     Add(&Decoded, Registers, &Flags);
+                case Op_jne:
+                    printf("jne: %x\n", Decoded.Operands[0].Immediate.Value);
                 default:
                     break;
             }
-            PrintRegisters(Registers);
-            PrintFlags(Flags);
-            printf("IP: %x\n", InstructionPointer);
+            printf(" IP: %x\n", InstructionPointer);
             printf("\n");
         }
         else
